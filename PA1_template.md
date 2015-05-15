@@ -1,46 +1,53 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
-```{r prepare, message=FALSE, warning=FALSE, echo=FALSE} 
-setwd('D:/dokumenty/R WD/coursera courses/5 - reproducible research/RepData_PeerAssessment1')
-require(data.table)
-require(dplyr)
-```
+
 
 ## Loading and preprocessing the data
-```{r loaddata}
+
+```r
 unzip("activity.zip")
 activity = fread('activity.csv')
-
 ```
 
 ## What is mean total number of steps taken per day?
-```{r stepsperday}
+
+```r
 stepsbyday = 
     activity %>% group_by(date) %>% summarize(steps = sum(steps))
 
 meansteps = as.character(round(mean(stepsbyday$steps, na.rm = TRUE))) # remove as.character and it breaks!?
 mediansteps = median(stepsbyday$steps, na.rm = TRUE)
 meansteps
-mediansteps
+```
 
+```
+## [1] "10766"
+```
+
+```r
+mediansteps
+```
+
+```
+## [1] 10765
+```
+
+```r
 hist(stepsbyday$steps, breaks = 14, 
      xlab = 'Steps per day', ylab = 'Day count', main = '', col = 'tomato')
 
 abline(v = mediansteps, lwd = 2, lty = 2)
-
 ```
 
-The mean of steps taken per day is `r meansteps` and the median is `r mediansteps`.
+![](PA1_template_files/figure-html/stepsperday-1.png) 
+
+The mean of steps taken per day is 10766 and the median is 10765.
 
 ## What is the average daily activity pattern?
 
 Getting average step count per intrval is straightforward enough...
-```{r dailypattern-1}
+
+```r
 stepsbyinterval = 
     activity[!is.na(activity$steps)] %>% 
     group_by(interval) %>% 
@@ -49,7 +56,8 @@ stepsbyinterval =
 ```
 
 ...but some manual processing is needed to to get the time intervals right. Note that coercing intervals to numbers leaves 'gaps' between 55 and 99 minute values, so instead a simple sequence is used for plot X-axis and is labeled by hand with correct hours.
-```{r dailypattern-2}
+
+```r
 plot(stepsbyinterval$sequence, stepsbyinterval$steps, type = 'l', 
      main = 'Average step count in 5 minute inervals', 
      xlab = 'Time of day', ylab = 'Steps', 
@@ -62,14 +70,19 @@ box()
 
 maxstepsplot = stepsbyinterval$sequence[which.max(stepsbyinterval$steps)]
 abline(v = maxstepsplot, lty = 2, col = 'violetred3')
+```
 
+![](PA1_template_files/figure-html/dailypattern-2-1.png) 
+
+```r
 maxstepsvalue = as.character(stepsbyinterval$interval[which.max(stepsbyinterval$steps)])
 ```
 
-The maximum ofsteps are on average made at `r maxstepsvalue`.
+The maximum ofsteps are on average made at 835.
 
 ## Imputing missing values
-```{r missing}
+
+```r
 fillednas = activity
 
 for (i in 1:dim(fillednas)[1]){
@@ -87,20 +100,24 @@ hist(stepsbyday2$steps, breaks = 14,
 meansteps2 = as.character(round(mean(stepsbyday2$steps, na.rm = TRUE)))
 mediansteps2 = median(stepsbyday2$steps, na.rm = TRUE)
 abline(v = mediansteps2, lwd = 2, lty = 2)
+```
 
+![](PA1_template_files/figure-html/missing-1.png) 
+
+```r
 if (identical(meansteps, meansteps2) & identical(mediansteps, mediansteps2)) {
     effect = 'no effect'
 } else {
     effect = 'an effect'
 }
-
 ```
 
-The mean of steps taken per day is `r meansteps2` and the median is `r mediansteps2`. Filling in the missing values has `r effect` on the mean and median compared to the original dataset.
+The mean of steps taken per day is 10766 and the median is 10765. Filling in the missing values has no effect on the mean and median compared to the original dataset.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 Using the dataset with NAs substituted by interval averages. Let's split it into weekday and weekend day groups and calculate interval averages for each. We'll also generate a 1:288 sequence to use for plot X-axis like before.
-```{r differences}
+
+```r
 differences = fillednas
 differences$day = weekdays(strptime(differences$date, format='%Y-%M-%d'))
 differences$weekend = 0
@@ -138,7 +155,14 @@ lines(weekends$sequence, weekdays$steps, col = 'navy')
 legend('topright', legend = c('weekends','weekdays'), col = c('salmon','navy'), lwd = 1)
 ```
 
+![](PA1_template_files/figure-html/differences-1.png) 
+
 Looking at the graph it seems the walking patterns are quite similar between weekdays and weekends. Just to get some metric on this, let's calculate correclation.
-```{r differences=2}
+
+```r
 cor(weekends$steps, weekdays$steps)
+```
+
+```
+## [1] 0.6900344
 ```
