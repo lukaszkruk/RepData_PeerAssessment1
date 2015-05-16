@@ -6,7 +6,8 @@ output:
 ---
 
 ```{r prepare, message=FALSE, warning=FALSE} 
-setwd('D:/dokumenty/R WD/coursera courses/5 - reproducible research/RepData_PeerAssessment1')
+# change the below to the directory containing the downloaded activity.zip data file.
+# setwd('D:/dokumenty/R WD/coursera courses/5 - reproducible research/RepData_PeerAssessment1')
 require(data.table)
 require(dplyr)
 ```
@@ -23,9 +24,9 @@ activity = fread('activity.csv')
 stepsbyday = 
     activity %>% group_by(date) %>% summarize(steps = sum(steps))
 
-meansteps = as.character(round(mean(stepsbyday$steps, na.rm = TRUE))) # remove as.character and it breaks!?
-mediansteps = median(stepsbyday$steps, na.rm = TRUE)
+meansteps = round(mean(stepsbyday$steps, na.rm = TRUE)) 
 meansteps
+mediansteps = round(median(stepsbyday$steps, na.rm = TRUE))
 mediansteps
 
 hist(stepsbyday$steps, breaks = 14, 
@@ -35,12 +36,12 @@ abline(v = mediansteps, lwd = 2, lty = 2)
 
 ```
 
-The mean of steps taken per day is `r meansteps` and the median is `r mediansteps`.
-
 ## What is the average daily activity pattern?
 
 Getting average step count per intrval is straightforward enough...
+
 ```{r dailypattern-1}
+
 stepsbyinterval = 
     activity[!is.na(activity$steps)] %>% 
     group_by(interval) %>% 
@@ -48,13 +49,16 @@ stepsbyinterval =
     mutate(sequence = 1:288)
 ```
 
-...but some manual processing is needed to to get the time intervals right. Note that coercing intervals to numbers leaves 'gaps' between 55 and 99 minute values, so instead a simple sequence is used for plot X-axis and is labeled by hand with correct hours.
+...but some manual processing is needed to to get the time intervals right. Note that coercing intervals to numbers leaves 'gaps' between 55 and 99 minute values, so instead a 1:288 sequence is used for plot X-axis but is labeled by hand with correct hours.
+
 ```{r dailypattern-2}
+
 plot(stepsbyinterval$sequence, stepsbyinterval$steps, type = 'l', 
      main = 'Average step count in 5 minute inervals', 
      xlab = 'Time of day', ylab = 'Steps', 
      col = 'violetred3',
-     axes = FALSE)
+     axes = FALSE
+     )
 
 axis(1, labels = c('0:00','6:00','12:00','18:00','23:59'), at = c(0, 72, 144, 216, 288))
 axis(2)
@@ -64,14 +68,23 @@ maxstepsplot = stepsbyinterval$sequence[which.max(stepsbyinterval$steps)]
 abline(v = maxstepsplot, lty = 2, col = 'violetred3')
 
 maxstepsvalue = as.character(stepsbyinterval$interval[which.max(stepsbyinterval$steps)])
+maxstepsvalue
 ```
 
-The maximum ofsteps are on average made at `r maxstepsvalue`.
+The maximum number of steps in a five minute interval are on average made at `r maxstepsvalue`.
 
 ## Imputing missing values
+
+Some of the days from the dataset have no reported data - they contain NA values instead. These are:
+
+```{r NA-dates}
+unique(activity[is.na(steps)][,date])
+```
+
+In each of these days, the NA values will be replaced by the mean of values from days for which the data is available. This will be done on a 5-minute interval basis. Then, mean and median of total steps per day are calculated in the same way as in the first step of the analysis. The results of these two calculations are compared to see if this strategy of filling in missing values introduces any changes to overall data distribution.
+
 ```{r missing}
-# double check if the histogram looks good. there should be MORE steps after adding data.
-# describe strategy for adding the data
+
 fillednas = activity
 
 for (i in 1:dim(fillednas)[1]){
@@ -81,28 +94,36 @@ for (i in 1:dim(fillednas)[1]){
 }
 
 stepsbyday2 = 
-    activity %>% group_by(date) %>% summarize(steps = sum(steps))
+    fillednas %>% group_by(date) %>% summarize(steps = sum(steps))
 
-hist(stepsbyday2$steps, breaks = 14, 
-     xlab = 'Steps per day', ylab = 'Day count', main = '', col = 'tomato')
-
-meansteps2 = as.character(round(mean(stepsbyday2$steps, na.rm = TRUE)))
-mediansteps2 = median(stepsbyday2$steps, na.rm = TRUE)
-abline(v = mediansteps2, lwd = 2, lty = 2)
+meansteps2 = round(mean(stepsbyday2$steps, na.rm = TRUE))
+meansteps2
+mediansteps2 = round(median(stepsbyday2$steps, na.rm = TRUE))
+mediansteps2
 
 if (identical(meansteps, meansteps2) & identical(mediansteps, mediansteps2)) {
     effect = 'no effect'
 } else {
     effect = 'an effect'
 }
+```
+
+Filling in the missing values has **`r effect`** on the mean and median compared to the original dataset. The histogram of data with filled NA values is as follows. 
+
+```{r missing-2}
+hist(stepsbyday2$steps, breaks = 14, 
+     xlab = 'Steps per day', ylab = 'Day count', main = '', col = 'tomato')
+abline(v = mediansteps2, lwd = 2, lty = 2)
 
 ```
 
-The mean of steps taken per day is `r meansteps2` and the median is `r mediansteps2`. Filling in the missing values has `r effect` on the mean and median compared to the original dataset.
-
 ## Are there differences in activity patterns between weekdays and weekends?
-Using the dataset with NAs substituted by interval averages. Let's split it into weekday and weekend day groups and calculate interval averages for each. We'll also generate a 1:288 sequence to use for plot X-axis like before.
+The dataset with NAs substituted by interval averages is split into weekday and weekend categories and interval averages for each group are calculated. A 1:288 sequence to use for plot X-axis is generated as before.
+
+Then the two series are plotted on a single chart for comparison.
+
 ```{r differences}
+
 differences = fillednas
 differences$day = weekdays(strptime(differences$date, format='%Y-%M-%d'))
 differences$weekend = 0
@@ -141,6 +162,7 @@ legend('topright', legend = c('weekends','weekdays'), col = c('salmon','navy'), 
 ```
 
 Looking at the graph it seems the walking patterns are quite similar between weekdays and weekends. Just to get some metric on this, let's calculate correclation.
+
 ```{r differences=2}
 cor(weekends$steps, weekdays$steps)
 ```
