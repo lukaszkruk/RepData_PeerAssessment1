@@ -5,7 +5,7 @@ output:
     keep_md: true
 ---
 
-```{r prepare, message=FALSE, warning=FALSE, echo=FALSE} 
+```{r prepare, message=FALSE, warning=FALSE} 
 setwd('D:/dokumenty/R WD/coursera courses/5 - reproducible research/RepData_PeerAssessment1')
 require(data.table)
 require(dplyr)
@@ -70,6 +70,8 @@ The maximum ofsteps are on average made at `r maxstepsvalue`.
 
 ## Imputing missing values
 ```{r missing}
+# double check if the histogram looks good. there should be MORE steps after adding data.
+# describe strategy for adding the data
 fillednas = activity
 
 for (i in 1:dim(fillednas)[1]){

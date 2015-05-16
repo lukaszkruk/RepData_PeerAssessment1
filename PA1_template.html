@@ -64,6 +64,9 @@ img {
 </div>
 
 
+<pre class="r"><code>setwd('D:/dokumenty/R WD/coursera courses/5 - reproducible research/RepData_PeerAssessment1')
+require(data.table)
+require(dplyr)</code></pre>
 <div id="loading-and-preprocessing-the-data" class="section level2">
 <h2>Loading and preprocessing the data</h2>
 <pre class="r"><code>unzip(&quot;activity.zip&quot;)
@@ -114,7 +117,9 @@ abline(v = maxstepsplot, lty = 2, col = 'violetred3')</code></pre>
 </div>
 <div id="imputing-missing-values" class="section level2">
 <h2>Imputing missing values</h2>
-<pre class="r"><code>fillednas = activity
+<pre class="r"><code># double check if the histogram looks good. there should be MORE steps after adding data.
+# describe strategy for adding the data
+fillednas = activity
 
 for (i in 1:dim(fillednas)[1]){
     if (is.na(fillednas$steps[i])) {

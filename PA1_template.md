@@ -1,6 +1,11 @@
 # Reproducible Research: Peer Assessment 1
 
 
+```r
+setwd('D:/dokumenty/R WD/coursera courses/5 - reproducible research/RepData_PeerAssessment1')
+require(data.table)
+require(dplyr)
+```
 
 ## Loading and preprocessing the data
 
@@ -83,6 +88,8 @@ The maximum ofsteps are on average made at 835.
 ## Imputing missing values
 
 ```r
+# double check if the histogram looks good. there should be MORE steps after adding data.
+# describe strategy for adding the data
 fillednas = activity
 
 for (i in 1:dim(fillednas)[1]){
